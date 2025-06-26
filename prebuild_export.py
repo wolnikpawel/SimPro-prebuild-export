@@ -3,32 +3,20 @@ import pandas as pd
 import os
 import logging
 from datetime import datetime
-import streamlit as st
 
-CLIENT_ID = os.environ.get("CLIENT_ID")
-CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-TOKEN_URL = os.environ.get("TOKEN_URL")
-
-
-# Constants
-COMPANY_ID = 2
-BASE_URL = "https://powernaturally.simprosuite.com/api/v1.0"
+BASE_URL = os.environ.get("BASE_URL")
 FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
 DATE_STAMP = datetime.now().strftime("%Y-%m-%d")
 OUTPUT_FILE = os.path.join(FOLDER_PATH, f"prebuild_{DATE_STAMP}.xlsx")
 LOG_FILE = os.path.join(FOLDER_PATH, "prebuild_log.txt")
 
-# Set up logging to file and console
 logging.basicConfig(filename=LOG_FILE, level=logging.INFO,
                     format='%(asctime)s - %(message)s', filemode='w')
-logging.getLogger().addHandler(logging.StreamHandler())  # Log to terminal too
+logging.getLogger().addHandler(logging.StreamHandler())
 
 
-def get_prebuilds_by_type(token, prebuild_type):
-    if prebuild_type not in ["standardPrice", "setPrice"]:
-        raise ValueError("Invalid prebuild type")
-
-    url = f"{BASE_URL}/companies/{COMPANY_ID}/prebuilds/{prebuild_type}/"
+def get_prebuilds_by_type(token, company_id, prebuild_type):
+    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_type}/"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
@@ -40,8 +28,8 @@ def get_prebuilds_by_type(token, prebuild_type):
         return []
 
 
-def get_prebuild_detail(token, prebuild_id, prebuild_type):
-    url = f"{BASE_URL}/companies/{COMPANY_ID}/prebuilds/{prebuild_type}/{prebuild_id}"
+def get_prebuild_detail(token, company_id, prebuild_id, prebuild_type):
+    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_type}/{prebuild_id}"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
@@ -52,8 +40,8 @@ def get_prebuild_detail(token, prebuild_id, prebuild_type):
         return None
 
 
-def get_catalog_items(token, prebuild_id):
-    url = f"{BASE_URL}/companies/{COMPANY_ID}/prebuilds/{prebuild_id}/catalogs/"
+def get_catalog_items(token, company_id, prebuild_id):
+    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_id}/catalogs/"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
@@ -82,16 +70,12 @@ def flatten_prebuild(prebuild):
 
 def flatten_catalog_item(item):
     flat = {}
-
-    # Flatten direct keys first
     for key, value in item.items():
         if isinstance(value, dict):
-            # Flatten nested dicts (like 'CatalogueItem')
             for sub_key, sub_value in value.items():
                 flat[f"{key}_{sub_key}"] = sub_value
         else:
             flat[key] = value
-
     return flat
 
 
@@ -103,7 +87,7 @@ def sanitize_excel_formulas(df):
     return df
 
 
-def extract_prebuilds(token):
+def extract_prebuilds(token, company_id):
     if not token:
         logging.error("❌ No token provided.")
         return pd.DataFrame()
@@ -111,7 +95,7 @@ def extract_prebuilds(token):
     detailed_rows = []
 
     for prebuild_type in ["standardPrice", "setPrice"]:
-        summary_list = get_prebuilds_by_type(token, prebuild_type)
+        summary_list = get_prebuilds_by_type(token, company_id, prebuild_type)
         logging.info(f"🔄 Found {len(summary_list)} {prebuild_type} prebuilds")
 
         for item in summary_list:
@@ -120,14 +104,14 @@ def extract_prebuilds(token):
                 continue
 
             logging.info(f"🔍 Getting {prebuild_type} prebuild ID: {prebuild_id}")
-            details = get_prebuild_detail(token, prebuild_id, prebuild_type)
+            details = get_prebuild_detail(token, company_id, prebuild_id, prebuild_type)
             if not details:
                 continue
 
             base_data = flatten_prebuild(details)
             base_data['PrebuildSource'] = prebuild_type
 
-            catalog_items = get_catalog_items(token, prebuild_id)
+            catalog_items = get_catalog_items(token, company_id, prebuild_id)
             if not catalog_items:
                 detailed_rows.append(base_data)
                 continue

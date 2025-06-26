@@ -30,11 +30,12 @@ if auth_status:
     with st.form("export_form"):
         simpro_username = st.text_input("SimPro Username")
         simpro_password = st.text_input("SimPro Password", type="password")
+        simpro_company_id = st.text_input("SimPro Company ID")
         run_export = st.form_submit_button("Run Export")
 
     if run_export:
-        if not simpro_username or not simpro_password:
-            st.error("❌ Please enter both SimPro credentials.")
+        if not simpro_username or not simpro_password or not simpro_company_id:
+            st.error("❌ Please enter username, password, and company ID.")
         else:
             token = get_access_token(simpro_username, simpro_password)
             if not token:
@@ -42,7 +43,7 @@ if auth_status:
             else:
                 st.success("✅ Logged in to SimPro.")
                 with st.spinner("Fetching and processing data..."):
-                    df = extract_prebuilds(token)
+                    df = extract_prebuilds(token, simpro_company_id)
                     if df.empty:
                         st.warning("⚠️ No data found.")
                     else:
@@ -56,7 +57,6 @@ if auth_status:
                                 file_name=filename,
                                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             )
-
 elif auth_status is False:
     st.error("Invalid username or password.")
 elif auth_status is None:

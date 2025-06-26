@@ -1,6 +1,0 @@
-config.yaml
-.env
-prebuild_*.xlsx
-prebuild_log.txt
-*.pyc
-__pycache__/
