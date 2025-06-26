@@ -4,7 +4,7 @@ import os
 import logging
 from datetime import datetime
 
-BASE_URL = os.environ.get("BASE_URL")
+BASE_URL = os.environ.get("BASE_URL").rstrip("/")
 FOLDER_PATH = os.path.dirname(os.path.abspath(__file__))
 DATE_STAMP = datetime.now().strftime("%Y-%m-%d")
 OUTPUT_FILE = os.path.join(FOLDER_PATH, f"prebuild_{DATE_STAMP}.xlsx")
@@ -16,7 +16,7 @@ logging.getLogger().addHandler(logging.StreamHandler())
 
 
 def get_prebuilds_by_type(token, company_id, prebuild_type):
-    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_type}/"
+    url = f"{BASE_URL}/{company_id}/prebuilds/{prebuild_type}/"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
@@ -29,7 +29,7 @@ def get_prebuilds_by_type(token, company_id, prebuild_type):
 
 
 def get_prebuild_detail(token, company_id, prebuild_id, prebuild_type):
-    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_type}/{prebuild_id}"
+    url = f"{BASE_URL}/{company_id}/prebuilds/{prebuild_type}/{prebuild_id}"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
@@ -41,7 +41,7 @@ def get_prebuild_detail(token, company_id, prebuild_id, prebuild_type):
 
 
 def get_catalog_items(token, company_id, prebuild_id):
-    url = f"{BASE_URL}/companies/{company_id}/prebuilds/{prebuild_id}/catalogs/"
+    url = f"{BASE_URL}/{company_id}/prebuilds/{prebuild_id}/catalogs/"
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(url, headers=headers)
 
