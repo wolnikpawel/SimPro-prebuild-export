@@ -5,8 +5,8 @@ import pandas as pd
 CLIENT_ID = os.environ.get("CLIENT_ID")
 CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
 TOKEN_URL = os.environ.get("TOKEN_URL")
-COMPANY_ID = 2
-BASE_URL = "https://powernaturally.simprosuite.com/api/v1.0"
+BASE_URL = os.environ.get("BASE_URL")
+
 
 def get_access_token(username, password):
     payload = {
